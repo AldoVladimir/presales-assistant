@@ -66,18 +66,13 @@ def generate_proposal(input_text):
     return result, response_code
 
 def generate_document(input_text):
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "text/plain"}
     print(f"Input text: {input_text}")
     try:
-        # Parse the input_text JSON string to get prompt
-        input_data = json.loads(input_text)
-        json_payload = {
-            "prompt": input_data.get("prompt", "")
-        }
+        # Send input_text directly as plain text string
+        print(f"Sending payload to https://propia-aabbe0c0bteygtga.centralus-01.azurewebsites.net/api/generar_documento: {input_text}")
         
-        print(f"Sending payload to {DOCUMENT_GENERATOR_URL}/generar_documento: {json_payload}")
-        
-        response = requests.post(f"{DOCUMENT_GENERATOR_URL}/generar_documento", headers=headers, json=json_payload, timeout=60)
+        response = requests.post("https://propia-aabbe0c0bteygtga.centralus-01.azurewebsites.net/api/generar_documento", headers=headers, data=input_text, timeout=60)
         
         print(f"Response status code: {response.status_code}")
         print(f"Response headers: {dict(response.headers)}")
@@ -108,10 +103,6 @@ def generate_document(input_text):
                 response_code = 200
                 print(f"Successfully received plain text response of {len(response.text)} characters")
                 
-    except json.JSONDecodeError as e:
-        print(f"Error parsing input JSON: {e}")
-        result = {"error": "Invalid JSON format in inputText"}
-        response_code = 400
     except requests.RequestException as e:
         print(f"Error calling Document Generator API: {e}")
         result = {"error": str(e)}
@@ -137,7 +128,7 @@ def lambda_handler(event, context):
     response_code = 200
 
     if api_path == "/runDocumentGenerator":
-        for item in event["requestBody"]["content"]["application/json"]["properties"]:
+        for item in event["requestBody"]["content"]["text/plain"]["properties"]:
             if item["name"] == "inputText":
                 input_text = item["value"]
         result, response_code = generate_document(input_text)
