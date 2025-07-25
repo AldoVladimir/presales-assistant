@@ -1,16 +1,16 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Video Game Sales Data API",
-    "description": "This API provides access to a PostgreSQL database containing video game sales data. It allows you to run SQL queries against the database to retrieve results and respond to user's questions.",
+    "title": "API de Generación de Documentos y Propuestas",
+    "description": "Esta API permite la generación automática de documentos y propuestas, así como funciones utilitarias para obtener la fecha actual y brindar contexto temporal.",
     "version": "1.0.0"
   },
   "paths": {
-    "/runSQLQuery": {
+    "/runDocumentGenerator": {
       "post": {
-        "summary": "Execute the SQL",
-        "description": "Execute the SQL query designed for the PostgreSQL database to retrieve results and respond to the user's questions.",
-        "operationId": "runSQLQuery",
+        "summary": "Generar documento",
+        "description": "Genera una propuesta en forma de documento basado en el json de entrada. El método retorna una URL prefirmada",
+        "operationId": "runDocumentGenerator",
         "requestBody": {
           "required": true,
           "content": {
@@ -18,39 +18,28 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "SQLQuery": {
+                  "inputText": {
                     "type": "string",
-                    "description": "SQL Query"
+                    "description": "JSON formateado como string que contiene el prompt para generar el documento"
                   }
                 },
-                "required": [
-                  "SQLQuery"
-                ]
+                "required": ["inputText"]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Respuesta exitosa",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": {
-                      "type": "object",
-                      "description": "SQL query results returned",
-                      "properties": {
-                        "data": {
-                          "type": "array",
-                          "description": "The data for the SQL query results returned"
-                        },
-                        "message": {
-                          "type": "string",
-                          "description": "Aditional information about the SQL query results returned (optional)"
-                        }
-                      }
+                    "document": {
+                      "type": "string",
+                      "description": "Contenido del documento generado en formato de texto",
+                      "example": "# Documento Generado\n\nContenido del documento..."
                     }
                   }
                 }
@@ -58,19 +47,65 @@
             }
           },
           "400": {
-            "description": "Bad request. One or more required fields are missing or invalid."
+            "description": "Solicitud incorrecta. Uno o más campos requeridos faltan o son inválidos."
+          }
+        }
+      }
+    },
+    "/runProposalGenerator": {
+      "post": {
+        "summary": "Generar propuesta",
+        "description": "Genera una previsualización de propuesta basada en el texto de entrada",
+        "operationId": "runProposalGenerator",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "inputText": {
+                    "type": "string",
+                    "description": "JSON formateado como string que contiene el requerimiento y cliente para generar la propuesta"
+                  }
+                },
+                "required": ["inputText"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Respuesta exitosa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "proposal": {
+                      "type": "string",
+                      "description": "Contenido completo de la propuesta económica generada en formato markdown",
+                      "example": "# Propuesta Económica para el Proyecto\n\n**Fecha:** 24 de julio de 2025\n**Cliente:** Danone\n\n## 1. RESUMEN EJECUTIVO\n\nEl presente documento presenta una propuesta económica y técnica..."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud incorrecta. Uno o más campos requeridos faltan o son inválidos."
           }
         }
       }
     },
     "/getCurrentDate": {
       "get": {
-        "summary": "Get current date",
-        "description": "Returns the current date in YYYY/MM/DD format to provide time context to the agent",
+        "summary": "Obtener fecha actual",
+        "description": "Retorna la fecha actual en formato AAAA/MM/DD para proporcionar contexto temporal al agente",
         "operationId": "getCurrentDate",
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Respuesta exitosa",
             "content": {
               "application/json": {
                 "schema": {
@@ -78,8 +113,8 @@
                   "properties": {
                     "currentDate": {
                       "type": "string",
-                      "description": "Current date in YYYY/MM/DD format",
-                      "example": "2023/11/15"
+                      "description": "Fecha actual en formato AAAA/MM/DD",
+                      "example": "2025/07/24"
                     }
                   }
                 }
@@ -87,35 +122,7 @@
             }
           },
           "400": {
-            "description": "Bad request. One or more required fields are missing or invalid."
-          }
-        }
-      }
-    },
-    "/getTablesInformation": {
-      "get": {
-        "summary": "Get tables information",
-        "description": "Provides information related to the data tables available to generate the SQL queries to answer the users questions",
-        "operationId": "getTablesInformation",
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "tablesInformation": {
-                      "type": "string",
-                      "description": "Descriptions, schema tables, a dictionary explaining each table column, and business rules associated with the tables"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request. One or more required fields are missing or invalid."
+            "description": "Solicitud incorrecta. Uno o más campos requeridos faltan o son inválidos."
           }
         }
       }

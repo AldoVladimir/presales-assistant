@@ -17,53 +17,8 @@ import {
   AGENT_ID,
   AGENT_ALIAS_ID,
   QUESTION_ANSWERS_TABLE_NAME,
-  MODEL_ID_FOR_CHART,
-  CHART_PROMPT,
 } from "../env.js";
 
-/**
- * Query data from DynamoDB
- *
- * @param {string} id - The ID to query
- * @returns {Promise<Object>} - The query response
- */
-export const getQueryResults = async (queryUuid = "") => {
-  let queryResults = [];
-  try {
-    const dynamodb = await createAwsClient(DynamoDBClient);
-
-    const input = {
-      TableName: QUESTION_ANSWERS_TABLE_NAME,
-      KeyConditionExpression: "id = :queryUuid",
-      ExpressionAttributeValues: {
-        ":queryUuid": {
-          S: queryUuid,
-        },
-      },
-      ConsistentRead: true,
-    };
-
-    console.log("------- Get Query Results -------");
-    console.log(input);
-
-    const command = new QueryCommand(input);
-    const response = await dynamodb.send(command);
-
-    if (response.hasOwnProperty("Items")) {
-      for (let i = 0; i < response.Items.length; i++) {
-        queryResults.push({
-          query: response.Items[i].query.S,
-          query_results: JSON.parse(response.Items[i].data.S).result,
-        });
-      }
-    }
-
-    return queryResults;
-  } catch (error) {
-    console.error("Error querying DynamoDB:", error);
-    throw error;
-  }
-};
 
 /**
  * Invoke an AWS Bedrock agent with streaming console output
@@ -71,7 +26,6 @@ export const getQueryResults = async (queryUuid = "") => {
  * @param {string} sessionId - The session ID
  * @param {string} inputText - The text to send to the agent
  * @param {Function} setAnswers - State setter for answers
- * @param {Function} setControlAnswers - State setter for control answers
  * @param {string} userName - User name
  * @param {string} queryUuid - Query UUID
  * @returns {Promise<Object>} - The agent response with comprehensive data
@@ -80,7 +34,6 @@ export const invokeBedrockAgent = async (
   sessionId,
   inputText = "",
   setAnswers,
-  setControlAnswers,
   userName = "",
   queryUuid = ""
 ) => {
@@ -136,10 +89,6 @@ export const invokeBedrockAgent = async (
             ...prevState,
             { text: completion, isStreaming: true },
           ]);
-          setControlAnswers((prevState) => [
-            ...prevState,
-            { current_tab_view: "answer" },
-          ]);
         } else {
           // Update the existing streaming answer with new text
           setAnswers((prevState) => {
@@ -182,7 +131,6 @@ export const invokeBedrockAgent = async (
                 chunkEvent.trace.trace.orchestrationTrace?.rationale?.text,
             },
           ]);
-          setControlAnswers((prevState) => [...prevState, {}]);
         }
 
         // Log other trace events for debugging
@@ -274,90 +222,4 @@ export const invokeBedrockAgent = async (
   }
 };
 
-/**
- * Generates a chart based on answer and data
- * @param {Object} answer - Answer object containing text
- * @returns {Object} Chart configuration or rationale for no chart
- */
-export const generateChart = async (answer) => {
-  const bedrock = await createAwsClient(BedrockRuntimeClient);
-  let query_results = "";
-  for (let i = 0; i < answer.queryResults.length; i++) {
-    query_results +=
-      JSON.stringify(answer.queryResults[i].query_results) + "\n";
-  }
 
-  // Prepare the prompt
-  let new_chart_prompt = CHART_PROMPT.replace(
-    /<<answer>>/i,
-    answer.text
-  ).replace(/<<data_sources>>/i, query_results);
-
-  const payload = {
-    anthropic_version: "bedrock-2023-05-31",
-    max_tokens: 2000,
-    temperature: 1,
-    messages: [
-      {
-        role: "user",
-        content: [{ type: "text", text: new_chart_prompt }],
-      },
-    ],
-  };
-
-  try {
-    // Send the request to Bedrock
-    console.log("------- Request chart -------");
-    console.log(payload);
-
-    const command = new InvokeModelCommand({
-      contentType: "application/json",
-      body: JSON.stringify(payload),
-      modelId: MODEL_ID_FOR_CHART,
-    });
-
-    const apiResponse = await bedrock.send(command);
-    const decodedResponseBody = new TextDecoder().decode(apiResponse.body);
-    const responseBody = JSON.parse(decodedResponseBody).content[0].text;
-
-    console.log("------- Response chart generation -------");
-    console.log(responseBody);
-
-    // Process the response
-    const has_chart = parseInt(extractBetweenTags(responseBody, "has_chart"));
-
-    if (has_chart) {
-      const chartConfig = JSON.parse(
-        extractBetweenTags(responseBody, "chart_configuration")
-      );
-      const chart = {
-        chart_type: removeCharFromStartAndEnd(
-          extractBetweenTags(responseBody, "chart_type"),
-          "\n"
-        ),
-        chart_configuration: handleFormatter(chartConfig),
-        caption: removeCharFromStartAndEnd(
-          extractBetweenTags(responseBody, "caption"),
-          "\n"
-        ),
-      };
-
-      console.log("------- Final chart generation -------");
-      console.log(chart);
-
-      return chart;
-    } else {
-      return {
-        rationale: removeCharFromStartAndEnd(
-          extractBetweenTags(responseBody, "rationale"),
-          "\n"
-        ),
-      };
-    }
-  } catch (error) {
-    console.error("Chart generation failed:", error);
-    return {
-      rationale: "Error generating or parsing chart data.",
-    };
-  }
-};
