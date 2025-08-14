@@ -1,4 +1,4 @@
-import { ACCESS_KEY_ID, SECRET_ACCESS_KEY, AWS_REGION } from '../env';
+import { ACCESS_KEY_ID, SECRET_ACCESS_KEY, REGION } from '../env';
 
 /**
  * Creates client for a specific AWS service with authenticated credentials
@@ -9,7 +9,7 @@ import { ACCESS_KEY_ID, SECRET_ACCESS_KEY, AWS_REGION } from '../env';
 export const createAwsClient = (ClientConstructor, options = {}) => {
   // Create client configuration
   const clientConfig = {
-    region: AWS_REGION,
+    region: REGION,
     credentials: {
       accessKeyId: ACCESS_KEY_ID,
       secretAccessKey: SECRET_ACCESS_KEY
