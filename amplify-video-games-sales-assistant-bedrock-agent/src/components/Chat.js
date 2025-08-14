@@ -11,12 +11,14 @@ import Alert from "@mui/material/Alert";
 import Grow from "@mui/material/Grow";
 import Fade from "@mui/material/Fade";
 import { v4 as uuidv4 } from "uuid";
-import { WELCOME_MESSAGE, MAX_LENGTH_INPUT_SEARCH } from "../env";
 import Answering from "./Answering.js";
 import {
   invokeBedrockAgent
 } from "../utils/AwsCalls";
 import MarkdownRenderer from "./MarkdownRenderer.js";
+
+const WELCOME_MESSAGE = process.env.REACT_APP_WELCOME_MESSAGE;
+const MAX_LENGTH_INPUT_SEARCH = process.env.REACT_APP_MAX_LENGTH_INPUT_SEARCH;
 
 const Chat = ({ userName = "Guest User" }) => {
   const [totalAnswers, setTotalAnswers] = React.useState(0);

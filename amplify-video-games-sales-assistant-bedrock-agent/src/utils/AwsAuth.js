@@ -1,4 +1,6 @@
-import { ACCESS_KEY_ID, SECRET_ACCESS_KEY, REGION } from '../env';
+const ACCESS_KEY_ID = process.env.REACT_APP_ACCESS_KEY_ID;
+const SECRET_ACCESS_KEY = process.env.REACT_APP_SECRET_ACCESS_KEY;
+const REGION = process.env.REACT_APP_REGION;
 
 /**
  * Creates client for a specific AWS service with authenticated credentials

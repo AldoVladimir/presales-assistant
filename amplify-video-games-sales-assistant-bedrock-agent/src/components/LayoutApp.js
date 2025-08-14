@@ -16,13 +16,14 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import Chat from "./Chat";
-import { APP_NAME } from "../env";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
+
+const APP_NAME = process.env.REACT_APP_NAME;
 
 function LayoutApp() {
   const [userName, setUserName] = React.useState("Guest User");
