@@ -13,12 +13,10 @@ import {
   removeCharFromStartAndEnd,
   handleFormatter,
 } from "./Utils.js";
-import {
-  AGENT_ID,
-  AGENT_ALIAS_ID,
-  QUESTION_ANSWERS_TABLE_NAME,
-} from "../env.js";
 
+
+const AGENT_ID = process.env.REACT_APP_AGENT_ID;
+const AGENT_ALIAS_ID = process.env.REACT_APP_AGENT_ALIAS_ID;
 
 /**
  * Invoke an AWS Bedrock agent with streaming console output
